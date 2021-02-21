@@ -44,6 +44,27 @@ namespace Bitcoin_Bot
             public string child_order_acceptance_id;
         }
 
+        ///v1/me/getchildorders
+        public class JsonGetChildOrders
+        {
+            public double id { get; set; }
+            public string child_order_id { get; set; }
+            public string product_code { get; set; }
+            public string side { get; set; }
+            public string child_order_type { get; set; }
+            public double price { get; set; }
+            public double average_price { get; set; }
+            public double size { get; set; }
+            public string child_order_state { get; set; }
+            public DateTime expire_date { get; set; }
+            public DateTime child_order_date { get; set; }
+            public string child_order_acceptance_id { get; set; }
+            public double outstanding_size { get; set; }
+            public double cancel_size { get; set; }
+            public double executed_size { get; set; }
+            public double total_commission { get; set; }
+        }
+
         //最終取引価格を TextBox に出力する
         public async Task GetCurrentBtcFxPrice()
         {
@@ -71,21 +92,24 @@ namespace Bitcoin_Bot
         static readonly string apiKey = "{{ YOUR API KEY }}";
         static readonly string apiSecret = "{{ YOUR API SECRET }}";
 
-        public async Task<string> MakeMarketOrder()
+        //成行注文を入れる
+        //  Param:
+        //  sSide: "BUY" か "SELL"
+        //  iSize: 枚数
+        public async Task<string> MakeMarketOrder(string sSide, double iSize)
         {
             var method = "POST";
             var path = "/v1/me/sendchildorder";
             var query = "";
             var body = @"{
-              ""product_code"": ""FX_BTC_JPY"",
-              ""child_order_type"": ""MARKET"",
-              ""side"": ""BUY"",
-              ""price"": 0,
-              ""size"": " + numericUpDownMarketOrder.Value + @",  
-              ""minute_to_expire"": 43200,
-              ""time_in_force"": ""GTC""
-              }";
-
+                        ""product_code"": ""FX_BTC_JPY"",
+                        ""child_order_type"": ""MARKET"",
+                        ""side"": """ + sSide + @""", 
+                        ""price"": 0,
+                        ""size"": " + numericUpDownMarketOrder.Value + @",  
+                        ""minute_to_expire"": 43200,
+                        ""time_in_force"": ""GTC""
+                        }";
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
             using (var content = new StringContent(body))
@@ -93,23 +117,48 @@ namespace Bitcoin_Bot
                 client.BaseAddress = endpointUri;
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 request.Content = content;
-
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
                 var data = timestamp + method + path + query + body;
                 var hash = SignWithHMACSHA256(data, apiSecret);
                 request.Headers.Add("ACCESS-KEY", apiKey);
                 request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
                 request.Headers.Add("ACCESS-SIGN", hash);
-
                 var message = await client.SendAsync(request);
-
                 var response = await message.Content.ReadAsStringAsync();
                 if (response == "[]")
                 {
-                    textBox1.AppendText("  Error: GetOrderInformationWithID() returning ERROR_NO_RESPONSE" + System.Environment.NewLine);
+                    Console.WriteLine("Error: MakeMarketOrder() returning ERROR_NO_RESPONSE");
                     return "ERROR_NO_RESPONSE";
                 }
 
+                return response;
+            }
+        }
+
+        public async Task<string> GetOrderInformationWithID(string ChildOrderAcceptanceID)
+        {
+            var method = "GET";
+            var path = "/v1/me/getchildorders";
+            var query = "?product_code=FX_BTC_JPY&child_order_acceptance_id=" + ChildOrderAcceptanceID;
+
+            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
+            {
+                client.BaseAddress = endpointUri;
+                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+                var data = timestamp + method + path + query;
+                var hash = SignWithHMACSHA256(data, apiSecret);
+                request.Headers.Add("ACCESS-KEY", apiKey);
+                request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
+                request.Headers.Add("ACCESS-SIGN", hash);
+                var message = await client.SendAsync(request);
+                var response = await message.Content.ReadAsStringAsync();
+
+                if (response == "[]")
+                {
+                    Console.WriteLine("GetOrderInformationWithID():OUT returning ERROR_NO_RESPONSE");
+                    return "ERROR_NO_RESPONSE";
+                }
                 return response;
             }
         }
@@ -152,22 +201,49 @@ namespace Bitcoin_Bot
 
         public async Task RunThisWhenButtonMarketOrderIsClicked()
         {
-            textBox1.AppendText("RunThisWhenButtonMarketOrderIsClicked():IN" + System.Environment.NewLine);
+            textBox1.AppendText("MakeMarketOrder() Start." + System.Environment.NewLine);
 
-            //MakeMarketOrder() で成行注文を発行
-            string ResponseMakeMarketOrder = await MakeMarketOrder();
-            textBox1.AppendText(ResponseMakeMarketOrder + System.Environment.NewLine);
-
-            //以下のようなレスポンスの文字列から値だけを取り出す
-            //{ "child_order_acceptance_id":"JRF20180314-102635-135926"}
+            string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
             var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
             var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
 
-            //処理をした旨を通知
-            textBox1.AppendText("--------------------------" + System.Environment.NewLine);
-            textBox1.AppendText("Market Order made: " + numericUpDownMarketOrder.Value + System.Environment.NewLine);
-            textBox1.AppendText(ChildOrderAcceptanceID + System.Environment.NewLine);
-            textBox1.AppendText("--------------------------" + System.Environment.NewLine);
+            textBox1.AppendText("MakeMarketOrder() succeeded with ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+        }
+
+        private void buttonCheckOrderFromID_Click(object sender, EventArgs e)
+        {
+            Task Job1 = RunThisWhenButtonCheckOrderFromIDIsClicked();
+        }
+        public async Task RunThisWhenButtonCheckOrderFromIDIsClicked()
+        {
+            //注文 ID の情報を取得。早すぎるとエラーになるのでその場合には再チャレンジ
+            string ResponseGetOrderInformationWithID = await GetOrderInformationWithID(textBoxCheckOrderFromID.Text);
+            for (int i = 0; (ResponseGetOrderInformationWithID == "ERROR_NO_RESPONSE") && (i < 100); i++)
+            {
+                textBox1.AppendText("Waiting for response. Re-check in 10sec.");
+                await Task.Delay(10000);
+                ResponseGetOrderInformationWithID = await GetOrderInformationWithID(textBoxCheckOrderFromID.Text);
+            }
+
+            //レスポンス (JsonGetChildOrders) を表示。
+            var DesirializedResponse = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID.Substring(1, ResponseGetOrderInformationWithID.Length - 2));
+            textBox1.AppendText("GetOrderInformationWithID succeeded for ID: " + textBoxCheckOrderFromID.Text + System.Environment.NewLine);
+            textBox1.AppendText("  id: " + DesirializedResponse.id + System.Environment.NewLine);
+            textBox1.AppendText("  child_order_id: " + DesirializedResponse.child_order_id + System.Environment.NewLine);
+            textBox1.AppendText("  product_code: " + DesirializedResponse.product_code + System.Environment.NewLine);
+            textBox1.AppendText("  side: " + DesirializedResponse.side + System.Environment.NewLine);
+            textBox1.AppendText("  child_order_type: " + DesirializedResponse.child_order_type + System.Environment.NewLine);
+            textBox1.AppendText("  price: " + DesirializedResponse.price + System.Environment.NewLine);
+            textBox1.AppendText("  average_price: " + DesirializedResponse.average_price + System.Environment.NewLine);
+            textBox1.AppendText("  size: " + DesirializedResponse.size + System.Environment.NewLine);
+            textBox1.AppendText("  child_order_state: " + DesirializedResponse.child_order_state + System.Environment.NewLine);
+            textBox1.AppendText("  expire_date: " + DesirializedResponse.expire_date + System.Environment.NewLine);
+            textBox1.AppendText("  child_order_date: " + DesirializedResponse.child_order_date + System.Environment.NewLine);
+            textBox1.AppendText("  child_order_acceptance_id: " + DesirializedResponse.child_order_acceptance_id + System.Environment.NewLine);
+            textBox1.AppendText("  outstanding_size: " + DesirializedResponse.outstanding_size + System.Environment.NewLine);
+            textBox1.AppendText("  cancel_size: " + DesirializedResponse.cancel_size + System.Environment.NewLine);
+            textBox1.AppendText("  executed_size: " + DesirializedResponse.executed_size + System.Environment.NewLine);
+            textBox1.AppendText("  total_commission: " + DesirializedResponse.total_commission + System.Environment.NewLine);
         }
     }
 }

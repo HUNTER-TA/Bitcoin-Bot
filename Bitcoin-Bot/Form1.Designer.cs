@@ -34,11 +34,16 @@ namespace Bitcoin_Bot
             this.labelPrice = new System.Windows.Forms.Label();
             this.textBoxPrice = new System.Windows.Forms.TextBox();
             this.groupBoxMarketOrder = new System.Windows.Forms.GroupBox();
-            this.labelMarketOrder = new System.Windows.Forms.Label();
-            this.numericUpDownMarketOrder = new System.Windows.Forms.NumericUpDown();
             this.buttonMarketOrder = new System.Windows.Forms.Button();
+            this.numericUpDownMarketOrder = new System.Windows.Forms.NumericUpDown();
+            this.labelMarketOrder = new System.Windows.Forms.Label();
+            this.groupBoxCheckOrderFromID = new System.Windows.Forms.GroupBox();
+            this.textBoxCheckOrderFromID = new System.Windows.Forms.TextBox();
+            this.buttonCheckOrderFromID = new System.Windows.Forms.Button();
+            this.labelCheckOrderFromID = new System.Windows.Forms.Label();
             this.groupBoxMarketOrder.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMarketOrder)).BeginInit();
+            this.groupBoxCheckOrderFromID.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBox1
@@ -64,7 +69,7 @@ namespace Bitcoin_Bot
             // 
             this.labelPrice.AutoSize = true;
             this.labelPrice.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.labelPrice.Location = new System.Drawing.Point(528, 26);
+            this.labelPrice.Location = new System.Drawing.Point(618, 26);
             this.labelPrice.Name = "labelPrice";
             this.labelPrice.Size = new System.Drawing.Size(104, 16);
             this.labelPrice.TabIndex = 2;
@@ -73,7 +78,7 @@ namespace Bitcoin_Bot
             // textBoxPrice
             // 
             this.textBoxPrice.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.textBoxPrice.Location = new System.Drawing.Point(531, 45);
+            this.textBoxPrice.Location = new System.Drawing.Point(621, 45);
             this.textBoxPrice.Name = "textBoxPrice";
             this.textBoxPrice.Size = new System.Drawing.Size(151, 23);
             this.textBoxPrice.TabIndex = 3;
@@ -84,22 +89,22 @@ namespace Bitcoin_Bot
             this.groupBoxMarketOrder.Controls.Add(this.numericUpDownMarketOrder);
             this.groupBoxMarketOrder.Controls.Add(this.labelMarketOrder);
             this.groupBoxMarketOrder.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.groupBoxMarketOrder.Location = new System.Drawing.Point(280, 26);
+            this.groupBoxMarketOrder.Location = new System.Drawing.Point(12, 12);
             this.groupBoxMarketOrder.Name = "groupBoxMarketOrder";
-            this.groupBoxMarketOrder.Size = new System.Drawing.Size(227, 100);
+            this.groupBoxMarketOrder.Size = new System.Drawing.Size(304, 56);
             this.groupBoxMarketOrder.TabIndex = 4;
             this.groupBoxMarketOrder.TabStop = false;
             this.groupBoxMarketOrder.Text = "成行注文";
             // 
-            // labelMarketOrder
+            // buttonMarketOrder
             // 
-            this.labelMarketOrder.AutoSize = true;
-            this.labelMarketOrder.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.labelMarketOrder.Location = new System.Drawing.Point(16, 33);
-            this.labelMarketOrder.Name = "labelMarketOrder";
-            this.labelMarketOrder.Size = new System.Drawing.Size(72, 16);
-            this.labelMarketOrder.TabIndex = 0;
-            this.labelMarketOrder.Text = "注文枚数";
+            this.buttonMarketOrder.Location = new System.Drawing.Point(223, 27);
+            this.buttonMarketOrder.Name = "buttonMarketOrder";
+            this.buttonMarketOrder.Size = new System.Drawing.Size(75, 23);
+            this.buttonMarketOrder.TabIndex = 2;
+            this.buttonMarketOrder.Text = "発注";
+            this.buttonMarketOrder.UseVisualStyleBackColor = true;
+            this.buttonMarketOrder.Click += new System.EventHandler(this.buttonMarketOrder_Click);
             // 
             // numericUpDownMarketOrder
             // 
@@ -109,7 +114,7 @@ namespace Bitcoin_Bot
             0,
             0,
             196608});
-            this.numericUpDownMarketOrder.Location = new System.Drawing.Point(95, 33);
+            this.numericUpDownMarketOrder.Location = new System.Drawing.Point(97, 26);
             this.numericUpDownMarketOrder.Name = "numericUpDownMarketOrder";
             this.numericUpDownMarketOrder.Size = new System.Drawing.Size(120, 23);
             this.numericUpDownMarketOrder.TabIndex = 1;
@@ -119,21 +124,62 @@ namespace Bitcoin_Bot
             0,
             131072});
             // 
-            // buttonMarketOrder
+            // labelMarketOrder
             // 
-            this.buttonMarketOrder.Location = new System.Drawing.Point(140, 62);
-            this.buttonMarketOrder.Name = "buttonMarketOrder";
-            this.buttonMarketOrder.Size = new System.Drawing.Size(75, 23);
-            this.buttonMarketOrder.TabIndex = 2;
-            this.buttonMarketOrder.Text = "発注";
-            this.buttonMarketOrder.UseVisualStyleBackColor = true;
-            this.buttonMarketOrder.Click += new System.EventHandler(this.buttonMarketOrder_Click);
+            this.labelMarketOrder.AutoSize = true;
+            this.labelMarketOrder.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.labelMarketOrder.Location = new System.Drawing.Point(18, 26);
+            this.labelMarketOrder.Name = "labelMarketOrder";
+            this.labelMarketOrder.Size = new System.Drawing.Size(72, 16);
+            this.labelMarketOrder.TabIndex = 0;
+            this.labelMarketOrder.Text = "注文枚数";
+            // 
+            // groupBoxCheckOrderFromID
+            // 
+            this.groupBoxCheckOrderFromID.Controls.Add(this.textBoxCheckOrderFromID);
+            this.groupBoxCheckOrderFromID.Controls.Add(this.buttonCheckOrderFromID);
+            this.groupBoxCheckOrderFromID.Controls.Add(this.labelCheckOrderFromID);
+            this.groupBoxCheckOrderFromID.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.groupBoxCheckOrderFromID.Location = new System.Drawing.Point(12, 74);
+            this.groupBoxCheckOrderFromID.Name = "groupBoxCheckOrderFromID";
+            this.groupBoxCheckOrderFromID.Size = new System.Drawing.Size(304, 56);
+            this.groupBoxCheckOrderFromID.TabIndex = 5;
+            this.groupBoxCheckOrderFromID.TabStop = false;
+            this.groupBoxCheckOrderFromID.Text = "child_order_acceptance_idから確認";
+            // 
+            // textBoxCheckOrderFromID
+            // 
+            this.textBoxCheckOrderFromID.Location = new System.Drawing.Point(46, 22);
+            this.textBoxCheckOrderFromID.Name = "textBoxCheckOrderFromID";
+            this.textBoxCheckOrderFromID.Size = new System.Drawing.Size(171, 23);
+            this.textBoxCheckOrderFromID.TabIndex = 3;
+            // 
+            // buttonCheckOrderFromID
+            // 
+            this.buttonCheckOrderFromID.Location = new System.Drawing.Point(223, 22);
+            this.buttonCheckOrderFromID.Name = "buttonCheckOrderFromID";
+            this.buttonCheckOrderFromID.Size = new System.Drawing.Size(75, 23);
+            this.buttonCheckOrderFromID.TabIndex = 2;
+            this.buttonCheckOrderFromID.Text = "確認";
+            this.buttonCheckOrderFromID.UseVisualStyleBackColor = true;
+            this.buttonCheckOrderFromID.Click += new System.EventHandler(this.buttonCheckOrderFromID_Click);
+            // 
+            // labelCheckOrderFromID
+            // 
+            this.labelCheckOrderFromID.AutoSize = true;
+            this.labelCheckOrderFromID.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.labelCheckOrderFromID.Location = new System.Drawing.Point(18, 25);
+            this.labelCheckOrderFromID.Name = "labelCheckOrderFromID";
+            this.labelCheckOrderFromID.Size = new System.Drawing.Size(22, 16);
+            this.labelCheckOrderFromID.TabIndex = 0;
+            this.labelCheckOrderFromID.Text = "ID";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.groupBoxCheckOrderFromID);
             this.Controls.Add(this.groupBoxMarketOrder);
             this.Controls.Add(this.textBoxPrice);
             this.Controls.Add(this.labelPrice);
@@ -144,6 +190,8 @@ namespace Bitcoin_Bot
             this.groupBoxMarketOrder.ResumeLayout(false);
             this.groupBoxMarketOrder.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMarketOrder)).EndInit();
+            this.groupBoxCheckOrderFromID.ResumeLayout(false);
+            this.groupBoxCheckOrderFromID.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -158,6 +206,10 @@ namespace Bitcoin_Bot
         private System.Windows.Forms.Button buttonMarketOrder;
         private System.Windows.Forms.NumericUpDown numericUpDownMarketOrder;
         private System.Windows.Forms.Label labelMarketOrder;
+        private System.Windows.Forms.GroupBox groupBoxCheckOrderFromID;
+        private System.Windows.Forms.TextBox textBoxCheckOrderFromID;
+        private System.Windows.Forms.Button buttonCheckOrderFromID;
+        private System.Windows.Forms.Label labelCheckOrderFromID;
     }
 }
 
