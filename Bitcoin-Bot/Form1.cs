@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace Bitcoin_Bot
 {
@@ -16,6 +17,27 @@ namespace Bitcoin_Bot
     {
         static readonly Uri endpointUri = new Uri("https://api.bitflyer.com");
 
+        //GetCurrentBtcFxPrice() で受け取るレスポンスの型を定義
+        public class JsonTicker
+        {
+            public string product_code { get; set; }
+            public string state { get; set; }
+            public DateTime timestamp { get; set; }
+            public int tick_id { get; set; }
+            public double best_bid { get; set; }
+            public double best_ask { get; set; }
+            public double best_bid_size { get; set; }
+            public double best_ask_size { get; set; }
+            public double total_bid_depth { get; set; }
+            public double total_ask_depth { get; set; }
+            public double market_bid_size { get; set; }
+            public double market_ask_size { get; set; }
+            public double ltp { get; set; }
+            public double volume { get; set; }
+            public double volume_by_product { get; set; }
+        }
+
+        //最終取引価格を TextBox に出力する
         public async Task GetCurrentBtcFxPrice()
         {
             var method = "GET";
@@ -29,7 +51,8 @@ namespace Bitcoin_Bot
                 var message = await client.SendAsync(request);
                 var response = await message.Content.ReadAsStringAsync();
 
-                textBox1.AppendText(response + System.Environment.NewLine);
+                var DesirializedResponse = JsonConvert.DeserializeObject<JsonTicker>(response);
+                textBox1.AppendText($"最終取引価格: {DesirializedResponse.ltp}" + System.Environment.NewLine);
             }
         }
 
