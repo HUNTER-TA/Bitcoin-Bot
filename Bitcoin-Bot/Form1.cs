@@ -40,30 +40,36 @@ namespace Bitcoin_Bot
         //最終取引価格を TextBox に出力する
         public async Task GetCurrentBtcFxPrice()
         {
-            var method = "GET";
-            var path = "/v1/ticker";
-            var query = "?product_code=FX_BTC_JPY";
-
-            using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
+            while (true)
             {
-                client.BaseAddress = endpointUri;
-                var message = await client.SendAsync(request);
-                var response = await message.Content.ReadAsStringAsync();
+                var method = "GET";
+                var path = "/v1/ticker";
+                var query = "?product_code=FX_BTC_JPY";
 
-                var DesirializedResponse = JsonConvert.DeserializeObject<JsonTicker>(response);
-                textBox1.AppendText($"最終取引価格: {DesirializedResponse.ltp}" + System.Environment.NewLine);
+                using (var client = new HttpClient())
+                using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
+                {
+                    client.BaseAddress = endpointUri;
+                    var message = await client.SendAsync(request);
+                    var response = await message.Content.ReadAsStringAsync();
+
+                    var DesirializedResponse = JsonConvert.DeserializeObject<JsonTicker>(response);
+                    var CurrentPrice = String.Format("{0:#,0}", DesirializedResponse.ltp);
+                    textBoxPrice.Text = CurrentPrice;
+                }
+                await Task.Delay(1000);
             }
         }
 
         public Form1()
         {
             InitializeComponent();
+            Task JobUpdatePrice = GetCurrentBtcFxPrice(); //最終取引価格更新処理
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Task Job1 = GetCurrentBtcFxPrice();
+            
         }
     }
 }
