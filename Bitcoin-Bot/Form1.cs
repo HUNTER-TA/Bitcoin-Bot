@@ -17,9 +17,6 @@ namespace Bitcoin_Bot
     public partial class Form1 : Form
     {
         static readonly Uri endpointUri = new Uri("https://api.bitflyer.jp");
-        static readonly string apiKey = "xxxxxxxxxxxxx";
-        static readonly string apiSecret = "xxxxxxxxxxxxx";
-
 
         //
         //JSON の型を定義：/v1/me/getchildorders
@@ -102,8 +99,8 @@ namespace Bitcoin_Bot
                 request.Content = content;
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
                 var data = timestamp + method + path + query + body;
-                var hash = SignWithHMACSHA256(data, apiSecret);
-                request.Headers.Add("ACCESS-KEY", apiKey);
+                var hash = SignWithHMACSHA256(data, textBoxApiSecret.Text);
+                request.Headers.Add("ACCESS-KEY", textBoxApiKey.Text);
                 request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
                 request.Headers.Add("ACCESS-SIGN", hash);
                 var message = await client.SendAsync(request);
@@ -144,8 +141,8 @@ namespace Bitcoin_Bot
                 request.Content = content;
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
                 var data = timestamp + method + path + query + body;
-                var hash = SignWithHMACSHA256(data, apiSecret);
-                request.Headers.Add("ACCESS-KEY", apiKey);
+                var hash = SignWithHMACSHA256(data, textBoxApiSecret.Text);
+                request.Headers.Add("ACCESS-KEY", textBoxApiKey.Text);
                 request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
                 request.Headers.Add("ACCESS-SIGN", hash);
                 var message = await client.SendAsync(request);
@@ -175,8 +172,8 @@ namespace Bitcoin_Bot
                 client.BaseAddress = endpointUri;
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
                 var data = timestamp + method + path + query;
-                var hash = SignWithHMACSHA256(data, apiSecret);
-                request.Headers.Add("ACCESS-KEY", apiKey);
+                var hash = SignWithHMACSHA256(data, textBoxApiSecret.Text);
+                request.Headers.Add("ACCESS-KEY", textBoxApiKey.Text);
                 request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
                 request.Headers.Add("ACCESS-SIGN", hash);
                 var message = await client.SendAsync(request);
@@ -273,26 +270,41 @@ namespace Bitcoin_Bot
         }
 
         //
-        //Button SpecialOrderBuyBuy
+        //Button SpecialOrder1
         //
-        private void buttonSpecialOrderBuyBuy_Click(object sender, EventArgs e)
+        private void checkBoxSpecialOrder1_CheckedChanged(object sender, EventArgs e)
         {
-            Task Job1 = RunThisWhenButtonSpecialOrderBuyBuyIsClicked();
+            Task Job1 = RunThisWhenButtonSpecialOrder1IsClicked();
         }
-        public async Task RunThisWhenButtonSpecialOrderBuyBuyIsClicked()
+        public async Task RunThisWhenButtonSpecialOrder1IsClicked()
         {
-            bool bContinueBuyBuy = true;
+            bool bContinueOrder = true;
 
-            while (bContinueBuyBuy)
+            while (bContinueOrder && checkBoxSpecialOrder1.Checked)
             {
+                //0) 準備
+                //注文方向(買い・売り)を決定する。
+                string orderSide1, orderSide2;
+                if (radioButtonSpecialOrder1_Buy.Checked == true)
+                {
+                    orderSide1 = "BUY";
+                    orderSide2 = "SELL";
+                }
+                else
+                {
+                    orderSide1 = "SELL";
+                    orderSide2 = "BUY";
+                }
+
+
                 //1) 成行注文
                 //成行注文を入れてレスポンス (JsonSendChildOrder) から注文 ID ("JRF20180314-102635-135926") を取り出す
-                string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
+                string ResponseMakeMarketOrder = await MakeMarketOrder(orderSide1, (double)numericUpDownMarketOrder.Value);
                 var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
                 var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
-                textBox1.AppendText("MakeMarketOrder() succeeded: side=BUY, size=" + numericUpDownMarketOrder.Value + " child_order_acceptance_ID=" + ChildOrderAcceptanceID + System.Environment.NewLine);
+                textBox1.AppendText("MakeMarketOrder() succeeded: side=" + orderSide1 +", size=" + numericUpDownMarketOrder.Value + " child_order_acceptance_ID=" + ChildOrderAcceptanceID + System.Environment.NewLine);
 
-                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID, "TBA", "BUY", "MARKET", "TBA", numericUpDownMarketOrder.Value);
+                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID, "TBA", orderSide1, "MARKET", "TBA", numericUpDownMarketOrder.Value);
 
                 //2) 注文 ID が取れるのを待つ。
                 string ResponseGetOrderInformationWithID = await GetOrderInformationWithID(ChildOrderAcceptanceID);
@@ -332,13 +344,21 @@ namespace Bitcoin_Bot
 
 
                 //4) 確約した成行注文の値段 + x を指値注文を入れる
-                double LimitOrderPrice = AveragePrice + double.Parse(textBoxSpecialOrderBuyBuy.Text);
-                string ResponseMakeLimitOrder = await MakeLimitOrder("SELL", LimitOrderPrice, (double)numericUpDownMarketOrder.Value);
+                double LimitOrderPrice;
+                if (orderSide2 == "BUY")
+                {
+                    LimitOrderPrice = AveragePrice - double.Parse(textBoxSpecialOrder1.Text);
+                }
+                else
+                {
+                    LimitOrderPrice = AveragePrice + double.Parse(textBoxSpecialOrder1.Text);
+                }
+                string ResponseMakeLimitOrder = await MakeLimitOrder(orderSide2, LimitOrderPrice, (double)numericUpDownMarketOrder.Value);
                 var DesirializedResponse3 = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeLimitOrder);
                 var ChildOrderAcceptanceID2 = DesirializedResponse3.child_order_acceptance_id;
                 textBox1.AppendText("MakeLimitOrder succeeded with ID=  " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
 
-                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID2, "TBA", "BUY", "MARKET", "TBA", numericUpDownMarketOrder.Value);
+                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID2, "TBA", orderSide2, "MARKET", "TBA", numericUpDownMarketOrder.Value);
 
 
                 //5) 注文 ID が取れるのを待つ。
@@ -414,16 +434,17 @@ namespace Bitcoin_Bot
                 }
                 if (ChildOrderState2 == "COMPLETED")
                 {
-                    bContinueBuyBuy = true; //re-run the whole process again
+                    bContinueOrder = true; //re-run the whole process again
                     textBox1.AppendText("TRANSACTION COMPLETED. RERUNNING THE PROCESS." + System.Environment.NewLine);
                 }
                 else
                 {
-                    bContinueBuyBuy = false; //ABORT
+                    bContinueOrder = checkBoxSpecialOrder1.Checked = false; //ABORT
                     textBox1.AppendText("SOMETHING WENT WRONG:" + System.Environment.NewLine);
                     textBox1.AppendText("  child_order_state: " + ChildOrderState2 + System.Environment.NewLine);
                 }
             }
+            textBox1.AppendText("FINISHED." + System.Environment.NewLine);
         }
 
 
@@ -466,8 +487,6 @@ namespace Bitcoin_Bot
             textBox1.AppendText("  executed_size: " + DesirializedResponse.executed_size + System.Environment.NewLine);
             textBox1.AppendText("  total_commission: " + DesirializedResponse.total_commission + System.Environment.NewLine);
         }
-
-
     }
 
 
