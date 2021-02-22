@@ -41,9 +41,17 @@ namespace Bitcoin_Bot
             this.textBoxCheckOrderFromID = new System.Windows.Forms.TextBox();
             this.buttonCheckOrderFromID = new System.Windows.Forms.Button();
             this.labelCheckOrderFromID = new System.Windows.Forms.Label();
+            this.groupBoxSpecialOrderBuyBuy = new System.Windows.Forms.GroupBox();
+            this.buttonSpecialOrderBuyBuy = new System.Windows.Forms.Button();
+            this.numericUpDownSpecialOrderBuyBuy = new System.Windows.Forms.NumericUpDown();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textBoxSpecialOrderBuyBuy = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBoxMarketOrder.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMarketOrder)).BeginInit();
             this.groupBoxCheckOrderFromID.SuspendLayout();
+            this.groupBoxSpecialOrderBuyBuy.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSpecialOrderBuyBuy)).BeginInit();
             this.SuspendLayout();
             // 
             // textBox1
@@ -174,11 +182,83 @@ namespace Bitcoin_Bot
             this.labelCheckOrderFromID.TabIndex = 0;
             this.labelCheckOrderFromID.Text = "ID";
             // 
+            // groupBoxSpecialOrderBuyBuy
+            // 
+            this.groupBoxSpecialOrderBuyBuy.Controls.Add(this.textBoxSpecialOrderBuyBuy);
+            this.groupBoxSpecialOrderBuyBuy.Controls.Add(this.label2);
+            this.groupBoxSpecialOrderBuyBuy.Controls.Add(this.buttonSpecialOrderBuyBuy);
+            this.groupBoxSpecialOrderBuyBuy.Controls.Add(this.numericUpDownSpecialOrderBuyBuy);
+            this.groupBoxSpecialOrderBuyBuy.Controls.Add(this.label1);
+            this.groupBoxSpecialOrderBuyBuy.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.groupBoxSpecialOrderBuyBuy.Location = new System.Drawing.Point(356, 12);
+            this.groupBoxSpecialOrderBuyBuy.Name = "groupBoxSpecialOrderBuyBuy";
+            this.groupBoxSpecialOrderBuyBuy.Size = new System.Drawing.Size(228, 117);
+            this.groupBoxSpecialOrderBuyBuy.TabIndex = 6;
+            this.groupBoxSpecialOrderBuyBuy.TabStop = false;
+            this.groupBoxSpecialOrderBuyBuy.Text = "特殊注文：買々";
+            // 
+            // buttonSpecialOrderBuyBuy
+            // 
+            this.buttonSpecialOrderBuyBuy.Location = new System.Drawing.Point(142, 81);
+            this.buttonSpecialOrderBuyBuy.Name = "buttonSpecialOrderBuyBuy";
+            this.buttonSpecialOrderBuyBuy.Size = new System.Drawing.Size(75, 23);
+            this.buttonSpecialOrderBuyBuy.TabIndex = 2;
+            this.buttonSpecialOrderBuyBuy.Text = "発注";
+            this.buttonSpecialOrderBuyBuy.UseVisualStyleBackColor = true;
+            this.buttonSpecialOrderBuyBuy.Click += new System.EventHandler(this.buttonSpecialOrderBuyBuy_Click);
+            // 
+            // numericUpDownSpecialOrderBuyBuy
+            // 
+            this.numericUpDownSpecialOrderBuyBuy.DecimalPlaces = 3;
+            this.numericUpDownSpecialOrderBuyBuy.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+            this.numericUpDownSpecialOrderBuyBuy.Location = new System.Drawing.Point(97, 52);
+            this.numericUpDownSpecialOrderBuyBuy.Name = "numericUpDownSpecialOrderBuyBuy";
+            this.numericUpDownSpecialOrderBuyBuy.Size = new System.Drawing.Size(120, 23);
+            this.numericUpDownSpecialOrderBuyBuy.TabIndex = 1;
+            this.numericUpDownSpecialOrderBuyBuy.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.label1.Location = new System.Drawing.Point(19, 54);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(40, 16);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "枚数";
+            // 
+            // textBoxSpecialOrderBuyBuy
+            // 
+            this.textBoxSpecialOrderBuyBuy.Location = new System.Drawing.Point(97, 23);
+            this.textBoxSpecialOrderBuyBuy.Name = "textBoxSpecialOrderBuyBuy";
+            this.textBoxSpecialOrderBuyBuy.Size = new System.Drawing.Size(120, 23);
+            this.textBoxSpecialOrderBuyBuy.TabIndex = 8;
+            this.textBoxSpecialOrderBuyBuy.Text = "1000";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.label2.Location = new System.Drawing.Point(18, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(40, 16);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "間隔";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.groupBoxSpecialOrderBuyBuy);
             this.Controls.Add(this.groupBoxCheckOrderFromID);
             this.Controls.Add(this.groupBoxMarketOrder);
             this.Controls.Add(this.textBoxPrice);
@@ -192,6 +272,9 @@ namespace Bitcoin_Bot
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMarketOrder)).EndInit();
             this.groupBoxCheckOrderFromID.ResumeLayout(false);
             this.groupBoxCheckOrderFromID.PerformLayout();
+            this.groupBoxSpecialOrderBuyBuy.ResumeLayout(false);
+            this.groupBoxSpecialOrderBuyBuy.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSpecialOrderBuyBuy)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -210,6 +293,12 @@ namespace Bitcoin_Bot
         private System.Windows.Forms.TextBox textBoxCheckOrderFromID;
         private System.Windows.Forms.Button buttonCheckOrderFromID;
         private System.Windows.Forms.Label labelCheckOrderFromID;
+        private System.Windows.Forms.GroupBox groupBoxSpecialOrderBuyBuy;
+        private System.Windows.Forms.TextBox textBoxSpecialOrderBuyBuy;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button buttonSpecialOrderBuyBuy;
+        private System.Windows.Forms.NumericUpDown numericUpDownSpecialOrderBuyBuy;
+        private System.Windows.Forms.Label label1;
     }
 }
 

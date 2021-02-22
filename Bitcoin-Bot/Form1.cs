@@ -17,6 +17,8 @@ namespace Bitcoin_Bot
     public partial class Form1 : Form
     {
         static readonly Uri endpointUri = new Uri("https://api.bitflyer.com");
+        static readonly string apiKey = "{{ YOUR API KEY }}";
+        static readonly string apiSecret = "{{ YOUR API SECRET }}";
 
         //GetCurrentBtcFxPrice() で受け取るレスポンスの型を定義
         public class JsonTicker
@@ -89,8 +91,50 @@ namespace Bitcoin_Bot
             }
         }
 
-        static readonly string apiKey = "{{ YOUR API KEY }}";
-        static readonly string apiSecret = "{{ YOUR API SECRET }}";
+        //指値注文を入れる
+        //  Param:
+        //  sSide: "BUY" か "SELL"
+        //  iPrice: 価格
+        //  iSize: 枚数
+        public async Task<string> MakeLimitOrder(string sSide, double iPrice, double iSize)
+        {
+            var method = "POST";
+            var path = "/v1/me/sendchildorder";
+            var query = "";
+            var body = @"{
+                        ""product_code"": ""FX_BTC_JPY"",
+                        ""child_order_type"": ""LIMIT"",
+                        ""side"": """ + sSide + @""", 
+                        ""price"":" + iPrice + @",  
+                        ""size"": " + iSize + @",  
+                        ""minute_to_expire"": 43200,
+                        ""time_in_force"": ""GTC""
+                        }";
+
+            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
+            using (var content = new StringContent(body))
+            {
+                client.BaseAddress = endpointUri;
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                request.Content = content;
+                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+                var data = timestamp + method + path + query + body;
+                var hash = SignWithHMACSHA256(data, apiSecret);
+                request.Headers.Add("ACCESS-KEY", apiKey);
+                request.Headers.Add("ACCESS-TIMESTAMP", timestamp);
+                request.Headers.Add("ACCESS-SIGN", hash);
+                var message = await client.SendAsync(request);
+                var response = await message.Content.ReadAsStringAsync();
+                if (response == "[]")
+                {
+                    Console.WriteLine("Error: MakeMarketOrder() returning ERROR_NO_RESPONSE");
+                    return "ERROR_NO_RESPONSE";
+                }
+
+                return response;
+            }
+        }
 
         //成行注文を入れる
         //  Param:
@@ -196,18 +240,119 @@ namespace Bitcoin_Bot
 
         private void buttonMarketOrder_Click(object sender, EventArgs e)
         {
-            Task job1 = RunThisWhenButtonMarketOrderIsClicked();
+            Task JobMakeMarketOrder = RunThisWhenButtonMarketOrderIsClicked();
         }
-
         public async Task RunThisWhenButtonMarketOrderIsClicked()
         {
             textBox1.AppendText("MakeMarketOrder() Start." + System.Environment.NewLine);
 
             string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
+
+            //レスポンスの型:JsonSendChildOrder
+            //{ "child_order_acceptance_id":"JRF20180314-102635-135926"}
             var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
             var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
-
             textBox1.AppendText("MakeMarketOrder() succeeded with ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+        }
+
+        private void buttonSpecialOrderBuyBuy_Click(object sender, EventArgs e)
+        {
+            Task Job1 = RunThisWhenButtonSpecialOrderBuyBuyIsClicked();
+        }
+
+        public async Task RunThisWhenButtonSpecialOrderBuyBuyIsClicked()
+        {
+            bool bContinueBuyBuy = true;
+
+            while (bContinueBuyBuy)
+            {
+                //1) 成行注文
+                //成行注文を入れてレスポンス (JsonSendChildOrder) から注文 ID ("JRF20180314-102635-135926") を取り出す
+                string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
+                var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
+                var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
+                textBox1.AppendText("MakeMarketOrder succeeded with ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+
+                //2) 確約した成行注文の値段を確認
+                //注文 ID の情報を取得。早すぎるとエラーになるのでその場合には再チャレンジ
+                string ResponseGetOrderInformationWithID = await GetOrderInformationWithID(ChildOrderAcceptanceID);
+                while (ResponseGetOrderInformationWithID == "ERROR_NO_RESPONSE")
+                {
+                    textBox1.AppendText("  Waiting for order to complete. Re-check in 10sec." + System.Environment.NewLine);
+                    await Task.Delay(10000);
+                    ResponseGetOrderInformationWithID = await GetOrderInformationWithID(ChildOrderAcceptanceID);
+                }
+
+                //レスポンス (JsonGetChildOrders) から平均価格、枚数、状態を取り出す。
+                var DesirializedResponse2 = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID.Substring(1, ResponseGetOrderInformationWithID.Length - 2));
+                var ChildOrderAveragePrice = DesirializedResponse2.average_price;
+                var ChildOrderSize = DesirializedResponse2.size;
+                var ChildOrderState = DesirializedResponse2.child_order_state;
+                textBox1.AppendText("  GetOrderInformationWithID succeeded for ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderAveragePrice: " + ChildOrderAveragePrice + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderSize: " + ChildOrderSize + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderState: " + ChildOrderState + System.Environment.NewLine);
+
+                //3) 確約した成行注文の値段 + x を指値注文を入れる
+                //average_price + x で指値注文を入れる。
+                double LimitOrderPrice = ChildOrderAveragePrice + double.Parse(textBoxSpecialOrderBuyBuy.Text);
+
+                string ResponseMakeLimitOrder = await MakeLimitOrder("SELL", LimitOrderPrice, (double)numericUpDownMarketOrder.Value);
+                var DesirializedResponse3 = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeLimitOrder);
+                var ChildOrderAcceptanceID2 = DesirializedResponse3.child_order_acceptance_id;
+                textBox1.AppendText("MakeLimitOrder succeeded with ID: " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
+
+                //注文 ID から状態を取得
+                string ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
+                while (ResponseGetOrderInformationWithID2 == "ERROR_NO_RESPONSE")
+                {
+                    textBox1.AppendText("  Waiting for order to complete. Re-check in 10sec." + System.Environment.NewLine);
+                    await Task.Delay(10000);
+                    ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
+                }
+
+                //レスポンス (JsonGetChildOrders) から child_order_state を取得。
+                var DesirializedResponse4 = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID2.Substring(1, ResponseGetOrderInformationWithID2.Length - 2));
+
+                var ChildOrderType2 = DesirializedResponse4.child_order_type;
+                var ChildOrderPrice2 = DesirializedResponse4.price;
+                var ChildOrderSize2 = DesirializedResponse4.size;
+                var ChildOrderState2 = DesirializedResponse4.child_order_state;
+                textBox1.AppendText("  GetOrderInformationWithID succeeded for ID: " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderType: " + ChildOrderType2 + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderPrice: " + ChildOrderPrice2 + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderSize: " + ChildOrderSize2 + System.Environment.NewLine);
+                textBox1.AppendText("    ChildOrderState: " + ChildOrderState2 + System.Environment.NewLine);
+
+                while (ChildOrderState2 == "ACTIVE")
+                {
+                    textBox1.AppendText("Limit Order ID " + ChildOrderAcceptanceID2 + " is still ACTIVE. recheck in 60s." + ChildOrderState2 + System.Environment.NewLine);
+                    await Task.Delay(60000);
+
+                    ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
+                    while (ResponseGetOrderInformationWithID2 == "ERROR_NO_RESPONSE")
+                    {
+                        textBox1.AppendText("  Waiting for order to complete. Re-check in 10sec." + System.Environment.NewLine);
+                        await Task.Delay(10000);
+                        ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
+                    }
+                    DesirializedResponse4 = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID2.Substring(1, ResponseGetOrderInformationWithID2.Length - 2));
+
+                    ChildOrderState2 = DesirializedResponse4.child_order_state;
+                }
+
+                if (ChildOrderState2 == "COMPLETED")
+                {
+                    bContinueBuyBuy = true; //re-run the whole process again
+                    textBox1.AppendText("TRANSACTION COMPLETED. RERUNNING THE PROCESS." + System.Environment.NewLine);
+                }
+                else
+                {
+                    bContinueBuyBuy = false; //ABORT
+                    textBox1.AppendText("SOMETHING WENT WRONG:" + System.Environment.NewLine);
+                    textBox1.AppendText("  child_order_state: " + ChildOrderState2 + System.Environment.NewLine);
+                }
+            }
         }
 
         private void buttonCheckOrderFromID_Click(object sender, EventArgs e)
@@ -218,6 +363,7 @@ namespace Bitcoin_Bot
         {
             //注文 ID の情報を取得。早すぎるとエラーになるのでその場合には再チャレンジ
             string ResponseGetOrderInformationWithID = await GetOrderInformationWithID(textBoxCheckOrderFromID.Text);
+
             for (int i = 0; (ResponseGetOrderInformationWithID == "ERROR_NO_RESPONSE") && (i < 100); i++)
             {
                 textBox1.AppendText("Waiting for response. Re-check in 10sec.");
