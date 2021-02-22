@@ -16,37 +16,14 @@ namespace Bitcoin_Bot
 {
     public partial class Form1 : Form
     {
-        static readonly Uri endpointUri = new Uri("https://api.bitflyer.com");
-        static readonly string apiKey = "{{ YOUR API KEY }}";
-        static readonly string apiSecret = "{{ YOUR API SECRET }}";
+        static readonly Uri endpointUri = new Uri("https://api.bitflyer.jp");
+        static readonly string apiKey = "xxxxxxxxxxxxx";
+        static readonly string apiSecret = "xxxxxxxxxxxxx";
 
-        //GetCurrentBtcFxPrice() で受け取るレスポンスの型を定義
-        public class JsonTicker
-        {
-            public string product_code { get; set; }
-            public string state { get; set; }
-            public DateTime timestamp { get; set; }
-            public int tick_id { get; set; }
-            public double best_bid { get; set; }
-            public double best_ask { get; set; }
-            public double best_bid_size { get; set; }
-            public double best_ask_size { get; set; }
-            public double total_bid_depth { get; set; }
-            public double total_ask_depth { get; set; }
-            public double market_bid_size { get; set; }
-            public double market_ask_size { get; set; }
-            public double ltp { get; set; }
-            public double volume { get; set; }
-            public double volume_by_product { get; set; }
-        }
 
-        ///v1/me/sendchildorder で受け取るレスポンスの型を定義
-        public class JsonSendChildOrder
-        {
-            public string child_order_acceptance_id;
-        }
-
-        ///v1/me/getchildorders
+        //
+        //JSON の型を定義：/v1/me/getchildorders
+        //
         public class JsonGetChildOrders
         {
             public double id { get; set; }
@@ -67,35 +44,40 @@ namespace Bitcoin_Bot
             public double total_commission { get; set; }
         }
 
-        //最終取引価格を TextBox に出力する
-        public async Task GetCurrentBtcFxPrice()
+        //
+        //JSON の型を定義：　/v1/me/sendchildorder 
+        //
+        public class JsonSendChildOrder
         {
-            while (true)
-            {
-                var method = "GET";
-                var path = "/v1/ticker";
-                var query = "?product_code=FX_BTC_JPY";
-
-                using (var client = new HttpClient())
-                using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
-                {
-                    client.BaseAddress = endpointUri;
-                    var message = await client.SendAsync(request);
-                    var response = await message.Content.ReadAsStringAsync();
-
-                    var DesirializedResponse = JsonConvert.DeserializeObject<JsonTicker>(response);
-                    var CurrentPrice = String.Format("{0:#,0}", DesirializedResponse.ltp);
-                    textBoxPrice.Text = CurrentPrice;
-                }
-                await Task.Delay(1000);
-            }
+            public string child_order_acceptance_id;
         }
 
+        //
+        //JSON の型を定義： v1/ticker 
+        //
+        public class JsonTicker
+        {
+            public string product_code { get; set; }
+            public DateTime timestamp { get; set; }
+            public int tick_id { get; set; }
+            public double best_bid { get; set; }
+            public double best_ask { get; set; }
+            public double best_bid_size { get; set; }
+            public double best_ask_size { get; set; }
+            public double total_bid_depth { get; set; }
+            public double total_ask_depth { get; set; }
+            public double ltp { get; set; }
+            public double volume { get; set; }
+            public double volume_by_product { get; set; }
+        }
+
+
+
+
+
+        //
         //指値注文を入れる
-        //  Param:
-        //  sSide: "BUY" か "SELL"
-        //  iPrice: 価格
-        //  iSize: 枚数
+        //
         public async Task<string> MakeLimitOrder(string sSide, double iPrice, double iSize)
         {
             var method = "POST";
@@ -136,10 +118,9 @@ namespace Bitcoin_Bot
             }
         }
 
+        //
         //成行注文を入れる
-        //  Param:
-        //  sSide: "BUY" か "SELL"
-        //  iSize: 枚数
+        //
         public async Task<string> MakeMarketOrder(string sSide, double iSize)
         {
             var method = "POST";
@@ -179,6 +160,9 @@ namespace Bitcoin_Bot
             }
         }
 
+        //
+        // child_order_acceptance_id から情報を取得する
+        //
         public async Task<string> GetOrderInformationWithID(string ChildOrderAcceptanceID)
         {
             var method = "GET";
@@ -206,7 +190,6 @@ namespace Bitcoin_Bot
                 return response;
             }
         }
-
         static string SignWithHMACSHA256(string data, string secret)
         {
             using (var encoder = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
@@ -215,7 +198,6 @@ namespace Bitcoin_Bot
                 return ToHexString(hash);
             }
         }
-
         static string ToHexString(byte[] bytes)
         {
             var sb = new StringBuilder(bytes.Length * 2);
@@ -226,40 +208,77 @@ namespace Bitcoin_Bot
             return sb.ToString();
         }
 
+        //
+        //最終取引価格を毎秒 TextBoxPrice に出力する
+        //
+        public async Task GetCurrentBtcFxPrice()
+        {
+            while (true)
+            {
+                var method = "GET";
+                var path = "/v1/ticker";
+                var query = "?product_code=FX_BTC_JPY";
+                using (var client = new HttpClient())
+                using (var request = new HttpRequestMessage(new HttpMethod(method), path + query))
+                {
+                    client.BaseAddress = endpointUri;
+                    var message = await client.SendAsync(request);
+                    var response = await message.Content.ReadAsStringAsync();
+                    var DesirializedResponse = JsonConvert.DeserializeObject<JsonTicker>(response);
+                    var CurrentPrice = String.Format("{0:#,0}", DesirializedResponse.ltp);
+                    textBoxPrice.Text = CurrentPrice;
+                }
+                await Task.Delay(1000);
+            }
+        }
 
+
+
+
+        //
+        //Form
+        //
         public Form1()
         {
             InitializeComponent();
-            Task JobUpdatePrice = GetCurrentBtcFxPrice(); //最終取引価格更新処理
+            Task JobUpdatePrice = GetCurrentBtcFxPrice();
         }
 
+
+        //
+        //Button 1
+        //
         private void button1_Click(object sender, EventArgs e)
+        {
+            Task JobButton1 = RunThisWhenButton1IsClicked();
+        }
+        public async Task RunThisWhenButton1IsClicked()
         {
 
         }
 
+        //
+        //Button MakeMarketOrder
+        //
         private void buttonMarketOrder_Click(object sender, EventArgs e)
         {
             Task JobMakeMarketOrder = RunThisWhenButtonMarketOrderIsClicked();
         }
         public async Task RunThisWhenButtonMarketOrderIsClicked()
         {
-            textBox1.AppendText("MakeMarketOrder() Start." + System.Environment.NewLine);
-
             string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
-
-            //レスポンスの型:JsonSendChildOrder
-            //{ "child_order_acceptance_id":"JRF20180314-102635-135926"}
             var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
             var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
-            textBox1.AppendText("MakeMarketOrder() succeeded with ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+            textBox1.AppendText("MakeMarketOrder() succeeded: side=BUY, size=" + numericUpDownMarketOrder.Value + " child_order_acceptance_ID=" + ChildOrderAcceptanceID + System.Environment.NewLine);
         }
 
+        //
+        //Button SpecialOrderBuyBuy
+        //
         private void buttonSpecialOrderBuyBuy_Click(object sender, EventArgs e)
         {
             Task Job1 = RunThisWhenButtonSpecialOrderBuyBuyIsClicked();
         }
-
         public async Task RunThisWhenButtonSpecialOrderBuyBuyIsClicked()
         {
             bool bContinueBuyBuy = true;
@@ -271,10 +290,11 @@ namespace Bitcoin_Bot
                 string ResponseMakeMarketOrder = await MakeMarketOrder("BUY", (double)numericUpDownMarketOrder.Value);
                 var DesirializedResponse = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeMarketOrder);
                 var ChildOrderAcceptanceID = DesirializedResponse.child_order_acceptance_id;
-                textBox1.AppendText("MakeMarketOrder succeeded with ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
+                textBox1.AppendText("MakeMarketOrder() succeeded: side=BUY, size=" + numericUpDownMarketOrder.Value + " child_order_acceptance_ID=" + ChildOrderAcceptanceID + System.Environment.NewLine);
 
-                //2) 確約した成行注文の値段を確認
-                //注文 ID の情報を取得。早すぎるとエラーになるのでその場合には再チャレンジ
+                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID, "TBA", "BUY", "MARKET", "TBA", numericUpDownMarketOrder.Value);
+
+                //2) 注文 ID が取れるのを待つ。
                 string ResponseGetOrderInformationWithID = await GetOrderInformationWithID(ChildOrderAcceptanceID);
                 while (ResponseGetOrderInformationWithID == "ERROR_NO_RESPONSE")
                 {
@@ -283,26 +303,45 @@ namespace Bitcoin_Bot
                     ResponseGetOrderInformationWithID = await GetOrderInformationWithID(ChildOrderAcceptanceID);
                 }
 
-                //レスポンス (JsonGetChildOrders) から平均価格、枚数、状態を取り出す。
+                //3) レスポンス (JsonGetChildOrders) から確約価格を取得
                 var DesirializedResponse2 = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID.Substring(1, ResponseGetOrderInformationWithID.Length - 2));
-                var ChildOrderAveragePrice = DesirializedResponse2.average_price;
-                var ChildOrderSize = DesirializedResponse2.size;
-                var ChildOrderState = DesirializedResponse2.child_order_state;
+                var AveragePrice = DesirializedResponse2.average_price;
                 textBox1.AppendText("  GetOrderInformationWithID succeeded for ID: " + ChildOrderAcceptanceID + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderAveragePrice: " + ChildOrderAveragePrice + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderSize: " + ChildOrderSize + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderState: " + ChildOrderState + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_date: " + DesirializedResponse2.child_order_date + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_acceptance_id: " + DesirializedResponse2.child_order_acceptance_id + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_state: " + DesirializedResponse2.child_order_state + System.Environment.NewLine);
+                textBox1.AppendText("    side: " + DesirializedResponse2.side + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_type: " + DesirializedResponse2.child_order_type + System.Environment.NewLine);
+                textBox1.AppendText("    price: " + DesirializedResponse2.average_price + System.Environment.NewLine);
+                textBox1.AppendText("    size: " + DesirializedResponse2.size + System.Environment.NewLine);
 
-                //3) 確約した成行注文の値段 + x を指値注文を入れる
-                //average_price + x で指値注文を入れる。
-                double LimitOrderPrice = ChildOrderAveragePrice + double.Parse(textBoxSpecialOrderBuyBuy.Text);
+                for (int RowNum = 0; RowNum < dataGridViewTrackDeals.Rows.Count; RowNum++)
+                {
+                    if ((dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value != null) &&
+                        (dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value.ToString() == ChildOrderAcceptanceID))
+                    {
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_date"].Value = DesirializedResponse2.child_order_date;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value = DesirializedResponse2.child_order_acceptance_id;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_state"].Value = DesirializedResponse2.child_order_state;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["side"].Value = DesirializedResponse2.side;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_type"].Value = DesirializedResponse2.child_order_type;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["price"].Value = DesirializedResponse2.average_price;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["size"].Value = DesirializedResponse2.size;
+                    }
+                }
 
+
+                //4) 確約した成行注文の値段 + x を指値注文を入れる
+                double LimitOrderPrice = AveragePrice + double.Parse(textBoxSpecialOrderBuyBuy.Text);
                 string ResponseMakeLimitOrder = await MakeLimitOrder("SELL", LimitOrderPrice, (double)numericUpDownMarketOrder.Value);
                 var DesirializedResponse3 = JsonConvert.DeserializeObject<JsonSendChildOrder>(ResponseMakeLimitOrder);
                 var ChildOrderAcceptanceID2 = DesirializedResponse3.child_order_acceptance_id;
-                textBox1.AppendText("MakeLimitOrder succeeded with ID: " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
+                textBox1.AppendText("MakeLimitOrder succeeded with ID=  " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
 
-                //注文 ID から状態を取得
+                dataGridViewTrackDeals.Rows.Add("TBA", ChildOrderAcceptanceID2, "TBA", "BUY", "MARKET", "TBA", numericUpDownMarketOrder.Value);
+
+
+                //5) 注文 ID が取れるのを待つ。
                 string ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
                 while (ResponseGetOrderInformationWithID2 == "ERROR_NO_RESPONSE")
                 {
@@ -311,21 +350,38 @@ namespace Bitcoin_Bot
                     ResponseGetOrderInformationWithID2 = await GetOrderInformationWithID(ChildOrderAcceptanceID2);
                 }
 
-                //レスポンス (JsonGetChildOrders) から child_order_state を取得。
+                //6) レスポンス (JsonGetChildOrders) から child_order_state を取得。
                 var DesirializedResponse4 = JsonConvert.DeserializeObject<JsonGetChildOrders>(ResponseGetOrderInformationWithID2.Substring(1, ResponseGetOrderInformationWithID2.Length - 2));
-
-                var ChildOrderType2 = DesirializedResponse4.child_order_type;
-                var ChildOrderPrice2 = DesirializedResponse4.price;
-                var ChildOrderSize2 = DesirializedResponse4.size;
                 var ChildOrderState2 = DesirializedResponse4.child_order_state;
-                textBox1.AppendText("  GetOrderInformationWithID succeeded for ID: " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderType: " + ChildOrderType2 + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderPrice: " + ChildOrderPrice2 + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderSize: " + ChildOrderSize2 + System.Environment.NewLine);
-                textBox1.AppendText("    ChildOrderState: " + ChildOrderState2 + System.Environment.NewLine);
 
-                while (ChildOrderState2 == "ACTIVE")
+                textBox1.AppendText("  GetOrderInformationWithID succeeded for ID: " + ChildOrderAcceptanceID2 + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_date: " + DesirializedResponse4.child_order_date + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_acceptance_id: " + DesirializedResponse4.child_order_acceptance_id + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_state: " + DesirializedResponse4.child_order_state + System.Environment.NewLine);
+                textBox1.AppendText("    side: " + DesirializedResponse4.side + System.Environment.NewLine);
+                textBox1.AppendText("    child_order_type: " + DesirializedResponse4.child_order_type + System.Environment.NewLine);
+                textBox1.AppendText("    price: " + DesirializedResponse4.average_price + System.Environment.NewLine);
+                textBox1.AppendText("    size: " + DesirializedResponse4.size + System.Environment.NewLine);
+
+                for (int RowNum = 0; RowNum < dataGridViewTrackDeals.Rows.Count; RowNum++)
                 {
+                    if ((dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value != null) &&
+                        (dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value.ToString() == ChildOrderAcceptanceID2))
+                    {
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_date"].Value = DesirializedResponse4.child_order_date;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value = DesirializedResponse4.child_order_acceptance_id;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_state"].Value = DesirializedResponse4.child_order_state;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["side"].Value = DesirializedResponse4.side;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_type"].Value = DesirializedResponse4.child_order_type;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["price"].Value = DesirializedResponse4.price;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["size"].Value = DesirializedResponse4.size;
+                    }
+                }
+
+                //7) 注文が通るのを待つ (ACTIVE から COMPLETE に代わるのを待つ）
+                for (int i = 0; i < 100 && ChildOrderState2 == "ACTIVE"; i++)
+                {
+                    ChildOrderState2 = "INITIALIZED";
                     textBox1.AppendText("Limit Order ID " + ChildOrderAcceptanceID2 + " is still ACTIVE. recheck in 60s." + ChildOrderState2 + System.Environment.NewLine);
                     await Task.Delay(60000);
 
@@ -341,6 +397,21 @@ namespace Bitcoin_Bot
                     ChildOrderState2 = DesirializedResponse4.child_order_state;
                 }
 
+                //8) 注文が COMPLETE になったら状態を更新して、再度 1) からループする
+                for (int RowNum = 0; RowNum < dataGridViewTrackDeals.Rows.Count; RowNum++)
+                {
+                    if ((dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value != null) &&
+                        (dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value.ToString() == ChildOrderAcceptanceID2))
+                    {
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_date"].Value = DesirializedResponse4.child_order_date;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_acceptance_id"].Value = DesirializedResponse4.child_order_acceptance_id;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_state"].Value = DesirializedResponse4.child_order_state;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["side"].Value = DesirializedResponse4.side;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["child_order_type"].Value = DesirializedResponse4.child_order_type;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["price"].Value = DesirializedResponse4.price;
+                        dataGridViewTrackDeals.Rows[RowNum].Cells["size"].Value = DesirializedResponse4.size;
+                    }
+                }
                 if (ChildOrderState2 == "COMPLETED")
                 {
                     bContinueBuyBuy = true; //re-run the whole process again
@@ -355,6 +426,10 @@ namespace Bitcoin_Bot
             }
         }
 
+
+        //
+        //Button CheckOrderFromID
+        //
         private void buttonCheckOrderFromID_Click(object sender, EventArgs e)
         {
             Task Job1 = RunThisWhenButtonCheckOrderFromIDIsClicked();
@@ -366,7 +441,7 @@ namespace Bitcoin_Bot
 
             for (int i = 0; (ResponseGetOrderInformationWithID == "ERROR_NO_RESPONSE") && (i < 100); i++)
             {
-                textBox1.AppendText("Waiting for response. Re-check in 10sec.");
+                textBox1.AppendText("Waiting for response. Re-check in 10sec." + System.Environment.NewLine);
                 await Task.Delay(10000);
                 ResponseGetOrderInformationWithID = await GetOrderInformationWithID(textBoxCheckOrderFromID.Text);
             }
@@ -391,5 +466,9 @@ namespace Bitcoin_Bot
             textBox1.AppendText("  executed_size: " + DesirializedResponse.executed_size + System.Environment.NewLine);
             textBox1.AppendText("  total_commission: " + DesirializedResponse.total_commission + System.Environment.NewLine);
         }
+
+
     }
+
+
 }

@@ -42,16 +42,25 @@ namespace Bitcoin_Bot
             this.buttonCheckOrderFromID = new System.Windows.Forms.Button();
             this.labelCheckOrderFromID = new System.Windows.Forms.Label();
             this.groupBoxSpecialOrderBuyBuy = new System.Windows.Forms.GroupBox();
+            this.textBoxSpecialOrderBuyBuy = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.buttonSpecialOrderBuyBuy = new System.Windows.Forms.Button();
             this.numericUpDownSpecialOrderBuyBuy = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBoxSpecialOrderBuyBuy = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.dataGridViewTrackDeals = new System.Windows.Forms.DataGridView();
+            this.child_order_date = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.child_order_acceptance_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.child_order_state = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.side = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.child_order_type = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.price = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.size = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.groupBoxMarketOrder.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMarketOrder)).BeginInit();
             this.groupBoxCheckOrderFromID.SuspendLayout();
             this.groupBoxSpecialOrderBuyBuy.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSpecialOrderBuyBuy)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTrackDeals)).BeginInit();
             this.SuspendLayout();
             // 
             // textBox1
@@ -60,7 +69,7 @@ namespace Bitcoin_Bot
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(776, 303);
+            this.textBox1.Size = new System.Drawing.Size(776, 139);
             this.textBox1.TabIndex = 0;
             // 
             // button1
@@ -197,6 +206,24 @@ namespace Bitcoin_Bot
             this.groupBoxSpecialOrderBuyBuy.TabStop = false;
             this.groupBoxSpecialOrderBuyBuy.Text = "特殊注文：買々";
             // 
+            // textBoxSpecialOrderBuyBuy
+            // 
+            this.textBoxSpecialOrderBuyBuy.Location = new System.Drawing.Point(97, 23);
+            this.textBoxSpecialOrderBuyBuy.Name = "textBoxSpecialOrderBuyBuy";
+            this.textBoxSpecialOrderBuyBuy.Size = new System.Drawing.Size(120, 23);
+            this.textBoxSpecialOrderBuyBuy.TabIndex = 8;
+            this.textBoxSpecialOrderBuyBuy.Text = "1000";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.label2.Location = new System.Drawing.Point(18, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(40, 16);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "間隔";
+            // 
             // buttonSpecialOrderBuyBuy
             // 
             this.buttonSpecialOrderBuyBuy.Location = new System.Drawing.Point(142, 81);
@@ -235,29 +262,64 @@ namespace Bitcoin_Bot
             this.label1.TabIndex = 0;
             this.label1.Text = "枚数";
             // 
-            // textBoxSpecialOrderBuyBuy
+            // dataGridViewTrackDeals
             // 
-            this.textBoxSpecialOrderBuyBuy.Location = new System.Drawing.Point(97, 23);
-            this.textBoxSpecialOrderBuyBuy.Name = "textBoxSpecialOrderBuyBuy";
-            this.textBoxSpecialOrderBuyBuy.Size = new System.Drawing.Size(120, 23);
-            this.textBoxSpecialOrderBuyBuy.TabIndex = 8;
-            this.textBoxSpecialOrderBuyBuy.Text = "1000";
+            this.dataGridViewTrackDeals.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewTrackDeals.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.child_order_date,
+            this.child_order_acceptance_id,
+            this.child_order_state,
+            this.side,
+            this.child_order_type,
+            this.price,
+            this.size});
+            this.dataGridViewTrackDeals.Location = new System.Drawing.Point(12, 288);
+            this.dataGridViewTrackDeals.Name = "dataGridViewTrackDeals";
+            this.dataGridViewTrackDeals.RowTemplate.Height = 21;
+            this.dataGridViewTrackDeals.Size = new System.Drawing.Size(776, 150);
+            this.dataGridViewTrackDeals.TabIndex = 7;
             // 
-            // label2
+            // child_order_date
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.label2.Location = new System.Drawing.Point(18, 26);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(40, 16);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "間隔";
+            this.child_order_date.HeaderText = "取引日時";
+            this.child_order_date.Name = "child_order_date";
+            // 
+            // child_order_acceptance_id
+            // 
+            this.child_order_acceptance_id.HeaderText = "注文ID";
+            this.child_order_acceptance_id.Name = "child_order_acceptance_id";
+            // 
+            // child_order_state
+            // 
+            this.child_order_state.HeaderText = "注文状態";
+            this.child_order_state.Name = "child_order_state";
+            // 
+            // side
+            // 
+            this.side.HeaderText = "売買";
+            this.side.Name = "side";
+            // 
+            // child_order_type
+            // 
+            this.child_order_type.HeaderText = "注文種類";
+            this.child_order_type.Name = "child_order_type";
+            // 
+            // price
+            // 
+            this.price.HeaderText = "価格";
+            this.price.Name = "price";
+            // 
+            // size
+            // 
+            this.size.HeaderText = "枚数";
+            this.size.Name = "size";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.dataGridViewTrackDeals);
             this.Controls.Add(this.groupBoxSpecialOrderBuyBuy);
             this.Controls.Add(this.groupBoxCheckOrderFromID);
             this.Controls.Add(this.groupBoxMarketOrder);
@@ -275,6 +337,7 @@ namespace Bitcoin_Bot
             this.groupBoxSpecialOrderBuyBuy.ResumeLayout(false);
             this.groupBoxSpecialOrderBuyBuy.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSpecialOrderBuyBuy)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewTrackDeals)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -299,6 +362,14 @@ namespace Bitcoin_Bot
         private System.Windows.Forms.Button buttonSpecialOrderBuyBuy;
         private System.Windows.Forms.NumericUpDown numericUpDownSpecialOrderBuyBuy;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.DataGridView dataGridViewTrackDeals;
+        private System.Windows.Forms.DataGridViewTextBoxColumn child_order_date;
+        private System.Windows.Forms.DataGridViewTextBoxColumn child_order_acceptance_id;
+        private System.Windows.Forms.DataGridViewTextBoxColumn child_order_state;
+        private System.Windows.Forms.DataGridViewTextBoxColumn side;
+        private System.Windows.Forms.DataGridViewTextBoxColumn child_order_type;
+        private System.Windows.Forms.DataGridViewTextBoxColumn price;
+        private System.Windows.Forms.DataGridViewTextBoxColumn size;
     }
 }
 
